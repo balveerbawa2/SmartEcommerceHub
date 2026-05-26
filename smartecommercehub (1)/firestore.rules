@@ -1,0 +1,107 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // Projects
+    function isValidProject(data) {
+      return data.keys().hasAll(['userId', 'name', 'createdAt', 'updatedAt'])
+        && data.userId == request.auth.uid
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && (!('description' in data) || (data.description is string && data.description.size() <= 1000))
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    match /projects/{projectId} {
+      allow read: if isSignedIn() && isValidId(projectId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(projectId) && isValidProject(incoming()) && incoming().keys().size() <= 5;
+      allow update: if isSignedIn() && isValidId(projectId) && isValidProject(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(projectId) && existing().userId == request.auth.uid;
+    }
+
+    // Chats
+    function isValidChat(data) {
+      return data.keys().hasAll(['userId', 'title', 'messages', 'updatedAt'])
+        && data.userId == request.auth.uid
+        && data.title is string && data.title.size() <= 200
+        && data.messages is list
+        && data.updatedAt is number
+        && (!('projectId' in data) || (data.projectId is string && data.projectId.size() <= 128));
+    }
+
+    match /chats/{chatId} {
+      allow read: if isSignedIn() && isValidId(chatId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(chatId) && isValidChat(incoming()) && incoming().keys().size() <= 5;
+      allow update: if isSignedIn() && isValidId(chatId) && isValidChat(incoming())
+        && incoming().userId == existing().userId
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'messages', 'projectId', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(chatId) && existing().userId == request.auth.uid;
+    }
+
+    // Notes
+    function isValidNote(data) {
+      return data.keys().hasAll(['userId', 'text', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.text is string && data.text.size() <= 10000
+        && data.createdAt is number
+        && (!('projectId' in data) || (data.projectId is string && data.projectId.size() <= 128));
+    }
+
+    match /notes/{noteId} {
+      allow read: if isSignedIn() && isValidId(noteId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(noteId) && isValidNote(incoming()) && incoming().keys().size() <= 4;
+      allow update: if isSignedIn() && isValidId(noteId) && isValidNote(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['text', 'projectId']);
+      allow delete: if isSignedIn() && isValidId(noteId) && existing().userId == request.auth.uid;
+    }
+
+    // Tasks
+    function isValidTask(data) {
+      return data.keys().hasAll(['userId', 'text', 'completed', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.text is string && data.text.size() <= 1000
+        && data.completed is bool
+        && data.createdAt is number
+        && (!('projectId' in data) || (data.projectId is string && data.projectId.size() <= 128));
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isSignedIn() && isValidId(taskId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(taskId) && isValidTask(incoming()) && incoming().keys().size() <= 5;
+      allow update: if isSignedIn() && isValidId(taskId) && isValidTask(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['text', 'completed', 'projectId']);
+      allow delete: if isSignedIn() && isValidId(taskId) && existing().userId == request.auth.uid;
+    }
+  }
+}

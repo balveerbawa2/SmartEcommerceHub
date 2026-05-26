@@ -1,0 +1,8 @@
+{
+  "name": "SmartEcommerceHub",
+  "description": "A premium full-stack AI-powered ecommerce web application offering advanced tools like Profit Calculators, Product Search Intelligence, and an integrated AI Assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

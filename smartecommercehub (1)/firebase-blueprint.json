@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "project": {
+      "title": "Project",
+      "description": "A workspace project",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["userId", "name", "createdAt", "updatedAt"]
+    },
+    "chat": {
+      "title": "Chat",
+      "description": "A chat session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "title": { "type": "string" },
+        "messages": { "type": "array" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["userId", "title", "messages", "updatedAt"]
+    },
+    "note": {
+      "title": "Note",
+      "description": "A saved note",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "text", "createdAt"]
+    },
+    "task": {
+      "title": "Task",
+      "description": "An action item task",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "text": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "text", "completed", "createdAt"]
+    }
+  },
+  "firestore": {
+    "projects/{projectId}": {
+      "schema": { "$ref": "#/entities/project" },
+      "description": "Workspace projects"
+    },
+    "chats/{chatId}": {
+      "schema": { "$ref": "#/entities/chat" },
+      "description": "Chat sessions"
+    },
+    "notes/{noteId}": {
+      "schema": { "$ref": "#/entities/note" },
+      "description": "Saved notes"
+    },
+    "tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/task" },
+      "description": "Action item tasks"
+    }
+  }
+}
